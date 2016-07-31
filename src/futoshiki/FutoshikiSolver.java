@@ -1,4 +1,4 @@
-package Futoshiki;
+package futoshiki;
 
 import java.awt.Point;
 import java.util.ArrayList;

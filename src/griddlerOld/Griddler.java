@@ -1,4 +1,4 @@
-package GriddlerOld;
+package griddlerOld;
 import java.util.ArrayList;
 import java.util.stream.IntStream;
 

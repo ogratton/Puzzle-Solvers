@@ -1,4 +1,4 @@
-package GriddlerOld;
+package griddlerOld;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 

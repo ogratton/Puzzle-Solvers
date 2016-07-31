@@ -1,4 +1,4 @@
-package Codeword;
+package codeword;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -12,22 +12,23 @@ import java.util.ArrayList;
  * PEAR
  * GEAR
  * etc.
+ * goal functionality: https://codewordsolver.com/
  * 
  * TODO change to array input so next point is easier
- * TODO cope better with _EA_ where _ is the same letter both times (use more symbols like '?' or '@')
+ * TODO cope better with _EA_ where _ is the same letter both times (use numbers 1-26)
  * TODO if we assume it is a codeword then the letters we have must be the only occurrences in the word (__NT cannot be TENT as we have T)
  * 
  * @author Oliver
  *
  */
-public class WordGuesser
+public class WordGuesserBasic
 {
 
 	private ArrayList<String> dictionary;
 	private BufferedReader br;
 	private String word = "";
 
-	private WordGuesser(String path)
+	public WordGuesserBasic(String path)
 	{
 		readDictionary(path);
 	}
@@ -59,16 +60,18 @@ public class WordGuesser
 		
 		if (word.length() != clue.length)
 		{
-			System.out.println("length mismatch");
+			// should never happen
+			System.out.println("FAILURE: length mismatch");
 			return false;
 		}
 		
 		for (int i = 0; i < clue.length; i++)
 		{
-			if (clue[i] != "_") // TODO expand to be any number from 1-26
+			if (!clue[i].equals("_")) // TODO expand to be any number from 1-26
 			{
 				if (!clue[i].equals( String.valueOf(word.charAt(i))) )
 				{
+					// this word does not match the clue pattern
 					return false;
 				}
 			}
@@ -124,8 +127,8 @@ public class WordGuesser
 
 	public static void main(String[] args)
 	{
-		WordGuesser wg = new WordGuesser("dict/super.txt");
-		wg.guess(new String[]{"i","m","a","_","o"});
+		WordGuesserBasic wg = new WordGuesserBasic("dict/super.txt");
+		wg.guess(new String[]{"i","m","a","_","_"});
 
 	}
 

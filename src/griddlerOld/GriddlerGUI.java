@@ -1,4 +1,4 @@
-package GriddlerOld;
+package griddlerOld;
 import javax.swing.JFrame;
 
 public class GriddlerGUI {

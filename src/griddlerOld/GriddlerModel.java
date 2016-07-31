@@ -1,4 +1,4 @@
-package GriddlerOld;
+package griddlerOld;
 import java.util.Observable;
 
 public class GriddlerModel extends Observable

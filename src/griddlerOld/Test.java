@@ -1,4 +1,4 @@
-package GriddlerOld;
+package griddlerOld;
 public class Test {
 
 	public static void main(String[] args)

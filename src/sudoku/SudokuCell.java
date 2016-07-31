@@ -1,16 +1,20 @@
-package Futoshiki;
+package sudoku;
 
 import java.util.TreeSet;
 
 /**
- * TODO make an abstract class that both this and SudokuCell can extend
- * as this is exactly the same code minus the box stuff
+ * The smallest squares in Sudoku
+ * Can contain EITHER a definite value or a list of possible values based on the
+ * board (i.e., if value == 0, check poss)
+ * TODO the cell may to know its coordinates
+ * 
  * @author Oliver
  *
  */
-public class FutoshikiCell
+public class SudokuCell
 {
 	private int value;
+	private int boxID;
 	private TreeSet<Integer> poss = new TreeSet<Integer>();
 
 	/**
@@ -19,9 +23,10 @@ public class FutoshikiCell
 	 * 
 	 * @param value the definite value of the cell
 	 */
-	public FutoshikiCell(int dim, int value)
+	public SudokuCell(int dim, int value, int boxID)
 	{
 		this.value = value;
+		this.boxID = boxID;
 		if (value == 0)
 		{
 			for (int i = 1; i < dim+1; i++)
@@ -33,6 +38,7 @@ public class FutoshikiCell
 		{
 			poss.add(value);
 		}
+
 	}
 
 	/**
@@ -86,6 +92,11 @@ public class FutoshikiCell
 	public TreeSet<Integer> getPoss()
 	{
 		return poss;
+	}
+	
+	public int getBoxID()
+	{
+		return boxID;
 	}
 	
 	public String toString()
