@@ -34,27 +34,13 @@ public class WordGuessTable
 	}
 	
 	/**
-	 * Remove the first guess for a word (for when it has been tested)
-	 * @param word coded word made up of numbers
+	 * Return a clone of itself
+	 * TODO check
 	 */
-	public WordGuessTable remHyp(String[] word)
+	public WordGuessTable copy()
 	{
-		ArrayList<String> guesses = guessTable.get(word);
-		guesses.remove(0);
-		if (guesses.isEmpty())
-		{
-			guessTable.remove(word);
-		}
-		guessTable.put(word, guesses);
-		return this;
-	}
-	
-	/**
-	 * return a clone of itself
-	 * TODO hopefully the clone won't sync changes with this. that could break stuff
-	 */
-	public WordGuessTable clone()
-	{
-		return this;
+		WordGuessTable newWGT = new WordGuessTable();
+		guessTable.forEach((k,v) -> newWGT.addWord(k,v));
+		return newWGT;
 	}
 }

@@ -56,8 +56,7 @@ public class WordGuesser
 		word = word.toLowerCase();
 		clue = stringArrayToLowerCase(clue);
 
-		HypothesisTable hypTableCopy = new HypothesisTable();
-		hypTableCopy.copy(hypTable); // copy of the hypTable to which we can make experimental changes
+		HypothesisTable htCopy = hypTable.copy(); // copy of the hypTable to which we can make experimental changes
 
 		if (word.length() != clue.length)
 		{
@@ -77,10 +76,10 @@ public class WordGuesser
 			}
 			else
 			{
-				String hyp = hypTableCopy.getHyp(clue[i]);
+				String hyp = htCopy.getHyp(clue[i]);
 				if (hyp.equals("_")) // no hypothesis exists for this letter yet
 				{
-					hypTableCopy.makeHyp(clue[i], word.substring(i, i + 1));
+					htCopy.makeHyp(clue[i], word.substring(i, i + 1));
 				}
 				else
 				{

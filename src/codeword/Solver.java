@@ -10,35 +10,238 @@ import java.util.ArrayList;
  */
 public class Solver
 {
-	private HypothesisTable hypTable = new HypothesisTable();
-	private WordGuessTable guessTable = new WordGuessTable();
+	private HypothesisTable hypTable;
+	private WordGuessTable guessTable;
 	private ArrayList<String[]> words;
 	private String[] word;
+	private WordGuesser wg;
 
-	private WordGuesser wg = new WordGuesser("dict/super.txt");
+	// TODO temp debug fields:
+	private int height;
+	private int width;
+	private final String NO_HYP = "_"; // the string to indicate no hypothesis
+	private String[][] grid;
 
-	public Solver(HypothesisTable ht, WordGuessTable wgt, ArrayList<String[]> ws)
+	public Solver(HypothesisTable ht, WordGuessTable wgt, ArrayList<String[]> ws, WordGuesser wg, int height, int width, String[][] grid)
 	{
 		hypTable = ht;
 		guessTable = wgt;
 		words = ws;
-		//word = w; // it should work out the word for itself
+		this.wg = wg;
+		// TODO temp debug fields
+		this.height = height;
+		this.width = width;
+		this.grid = grid;
 	}
 
-	public void apply()
+	/**
+	 * Begin solving
+	 * 
+	 * @return true if successful, false if not, bundled in a tuple with the
+	 * hypTable so that we can see the result
+	 */
+	public Tuple<Boolean, HypothesisTable> start()
 	{
-		// TODO
-		// apply the hypothesis of "word"
-		// refresh the guess table with the new hyp table
+		// get the word we'll we working on
+		if (!words.isEmpty())
+			word = findMostCertainWord();
+		else
+		{
+			// TODO this is code copying from below. Bad boy.
+			if (hypTable.isFull()) // TODO I *think* this is an adequate end goal measure
+				return new Tuple<Boolean, HypothesisTable>(new Boolean(true), hypTable);
+			else
+				return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable);
+		}
+
+		// if any words have zero possibilities then we have either finished or got something wrong
+		for (String[] word : words)
+		{
+			if (guessTable.getWord(word).isEmpty())
+			{
+				if (hypTable.isFull()) // TODO I *think* this is an adequate end goal measure
+				{
+					/*
+					 * the puzzle is solved, so now we pass the correct hypTable
+					 * all the way up the tree to the top
+					 */
+					return new Tuple<Boolean, HypothesisTable>(new Boolean(true), hypTable);
+				}
+				else
+				{
+					/*
+					 * there is a word pattern that we can't guess this may be a
+					 * dictionary problem but in most cases I should think it is
+					 * because a hypothesis was wrong
+					 */
+					return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable);
+				}
+			}
+		}
+
+		/*
+		 * for every possibility of 'The Word', make and start a child Solver for
+		 * it
+		 * this will build up a depth first game tree
+		 */
+		for (int i = 0; i < guessTable.getWord(word).size(); i++)
+		{
+
+			// apply the hypothesis of "word"
+			HypothesisTable htCopy = applyHypothesis();
+			// refresh the guess table with the new hyp table
+			WordGuessTable wgtCopy = refreshGuesses(htCopy);
+
+			// creates a tree of Solvers as they are started before this Solver ends
+			Solver child = genChild(htCopy, wgtCopy);
+
+			Tuple<Boolean, HypothesisTable> solution = child.start();
+			if (solution.x)
+			{
+				return solution; // child was successful!!1!
+			}
+		}
+		return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable); // all the children have run and they have all failed
 	}
 
-	public void genGhild()
+	/**
+	 * make a single child
+	 * 
+	 * @return a child
+	 */
+	public Solver genChild(HypothesisTable ht, WordGuessTable wgt)
 	{
-		// TODO
-		// for the first guess in the most guessable word
-		// make a child Solver with that word
-		// (I'm not doing all of them at once for efficiency reasons as this will be a depth first search
-		// so generating all the children is a waste of time)
+		words.remove(word);
+		return new Solver(ht, wgt, words, wg, height, width, grid);
+	}
+
+	/**
+	 * Calculate the possibilities for all the words in the puzzle
+	 * 
+	 * @param ht the unborn child's ht with "word" applied
+	 */
+	private WordGuessTable refreshGuesses(HypothesisTable ht)
+	{
+		WordGuessTable wgtCopy = guessTable.copy();
+
+		for (int i = 0; i < words.size(); i++)
+		{
+			ArrayList<String> guesses = wg.guess(words.get(i), ht);
+			wgtCopy.addWord(words.get(i), guesses);
+			//			System.out.println(wgtCopy.getWord(words.get(i)).size());
+		}
+		//		System.out.println("----------");
+		return wgtCopy;
+	}
+
+	/**
+	 * Of all the coded words, return the one with the fewest possibilities
+	 * 
+	 * @return a coded word
+	 */
+	private String[] findMostCertainWord()
+	{
+		// to start, assume the first is the best
+		String[] mostCertainWord = words.get(0);
+		// then get proven wrong (most of the time)
+		for (String[] word : words)
+		{
+			if (guessTable.getWord(word).size() < guessTable.getWord(mostCertainWord).size())
+			{
+				mostCertainWord = word;
+			}
+		}
+		printArray(mostCertainWord);
+		System.out.println("8 is " + hypTable.getHyp("8")); // TODO should always be A for puzzle 2
+		return mostCertainWord;
+	}
+
+	/**
+	 * Use The Word and make a hypothesis for each of its letters
+	 * 
+	 * @return A new copy of the hypothesis table with changes applied
+	 */
+	private HypothesisTable applyHypothesis()
+	{
+		//TODO check
+		// Copy existing hypTable
+		HypothesisTable htCopy = hypTable.copy();
+		// get the first of the possibilities for the coded word with the least possibilities
+		String guess = guessTable.getWord(word).get(0);
+		for (int i = 0; i < word.length; i++)
+		{
+				htCopy.makeHyp(word[i], guess.substring(i, i + 1));
+		}
+
+		printGrid(htCopy);
+
+		return htCopy;
+	}
+
+	/**
+	 * DEBUG
+	 * Print an array with items separated by a comma (not toString)
+	 * 
+	 * @param array array to be printed
+	 */
+	private void printArray(String[] array)
+	{
+		String toPrint = "";
+		for (int i = 0; i < array.length; i++)
+		{
+			toPrint += array[i] + ",";
+		}
+		System.out.println(toPrint.substring(0, toPrint.length() - 1));
+	}
+
+	/**
+	 * DEBUG
+	 * Format the codeword somewhat
+	 */
+	public void printGrid(HypothesisTable htCopy)
+	{
+		for (int i = 0; i < height; i++)
+		{
+			for (int j = 0; j < width; j++)
+			{
+				if (i == 0 && j == 0)
+				{
+					System.out.println("----------------------------------------"); // print above first row
+				}
+				if (j == 0)
+				{
+					System.out.print("|"); // print at the beginning of the line
+				}
+				String value;
+				if (grid[i][j].equals("00"))
+				{
+					value = "  ";
+				}
+				else
+				{
+					String hyp = htCopy.getHyp(grid[i][j]);
+
+					// if no hyp made yet stick with the number
+					if (hyp.equals(NO_HYP))
+					{
+						value = grid[i][j];
+						if (value.length() == 1)
+						{
+							value += " ";
+						}
+					}
+					// hyp has been made
+					else
+					{
+						value = hyp + " ";
+					}
+				}
+
+				System.out.print(value + "|");
+			}
+			System.out.println(); // print below each line
+		}
+		System.out.println("----------------------------------------"); // print below last row
 	}
 
 }

@@ -12,14 +12,14 @@ import java.util.concurrent.ConcurrentMap;
 public class HypothesisTable
 {
 	private ConcurrentMap<String, String> hypTable = new ConcurrentHashMap<String, String>();
-	private String noHyp = "_"; // the string to indicate no hypothesis
+	private final String NO_HYP = "_"; // the string to indicate no hypothesis
 
 	public HypothesisTable()
 	{
 		// set up the table with 26 entries all with the noHyp symbol
 		for (int i = 1; i <= 26; i++)
 		{
-			hypTable.put(Integer.toString(i), noHyp);
+			hypTable.put(Integer.toString(i), NO_HYP);
 		}
 	}
 
@@ -45,16 +45,35 @@ public class HypothesisTable
 	}
 	
 	/**
-	 * Copy mappings of 'that' onto 'this'
-	 * @param that
+	 * @return is every letter hypothesised to something?
 	 */
-	public void copy(HypothesisTable that)
+	public boolean isFull()
 	{
 		for (int i = 1; i <= 26; i++)
 		{
 			String num = Integer.toString(i);
-			hypTable.put(num, that.getHyp(num));
+			if(hypTable.get(num).equals(NO_HYP))
+			{
+				return false;
+			}
 		}
+		
+		return true;
+	}
+	
+	/**
+	 * Copy mappings of 'that' onto 'this'
+	 * @param that
+	 */
+	public HypothesisTable copy()
+	{
+		HypothesisTable newHT = new HypothesisTable();
+		for (int i = 1; i <= 26; i++)
+		{
+			String num = Integer.toString(i);
+			newHT.makeHyp(num, hypTable.get(num));
+		}
+		return newHT;
 	}
 	
 }

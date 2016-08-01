@@ -14,13 +14,15 @@ import auxil.CSVReader;
  */
 public class CodewordSolver
 {
-	private String[][] grid;
 	private ArrayList<String[]> words = new ArrayList<String[]>();
-	private WordGuesser wg = new WordGuesser("dict/super.txt");
 	private HypothesisTable hypTable = new HypothesisTable();
 	private WordGuessTable guessTable = new WordGuessTable();
+	private WordGuesser wg = new WordGuesser("dict/super.txt");
+	private String[][] grid;
 	private int height;
 	private int width;
+	
+	private final String NO_HYP = "_"; // the string to indicate no hypothesis
 
 	public CodewordSolver(String filename)
 	{
@@ -31,7 +33,7 @@ public class CodewordSolver
 		width = setUp.get(0).length;
 		grid = new String[height][width];
 
-		// get the given letters
+		// get the given letters from file
 		String[] clues = setUp.get(height);
 		for (int i = 0; i < clues.length; i++)
 		{
@@ -40,6 +42,7 @@ public class CodewordSolver
 		}
 
 		// fill the grid with the actual numbers
+		// TODO debug only, not essential for solving
 		for (int i = 0; i < height; i++)
 		{
 			for (int j = 0; j < width; j++)
@@ -48,69 +51,36 @@ public class CodewordSolver
 			}
 		}
 
+		// extract the chains of squares that will make up words from the puzzle
 		getWords();
-		refreshGuesses(guessTable);
-		solver();
-		//printGrid();
-	}
-
-	/**
-	 * Solving algorithm
-	 * Should be recursive
-	 */
-	private void solver()
-	{
-		// TODO lol
-		/*
-		 * Need a recursive strategy with immutable tables
-		 * Each "node" must contain its parents' tables too
-		 * This needs to be its own immutable data structure
-		 */
-		WordGuessTable tempGuessTable = guessTable.clone();
-
-		// 1. work through guesses for the "words" with the fewest possibilities
-		String[] mostCertainWord = findMostCertainWord(tempGuessTable);
-		String guess = tempGuessTable.getWord(mostCertainWord).get(0);
-		// 2. apply one of these and remove it from the "guess list"
-		for (int j = 0; j < mostCertainWord.length; j++)
+		printGrid();
+		// start the solving algorithm
+		Tuple<Boolean, HypothesisTable> solution = solver();
+		if (solution.x)
 		{
-			hypTable.makeHyp(mostCertainWord[j], guess.substring(j, j + 1));
+			System.out.println("SUCCESS!!");
+			printGrid(); // TODO print grid with hypTable subbed in
 		}
-		tempGuessTable.remHyp(mostCertainWord);
-		// 3. refresh guessTable
-		refreshGuesses(tempGuessTable);
-
-		// if any words have 0 guesses, either the dictionary has failed or one of the hypotheses has
-		// therefore undo the most recent hypothesis and try the next guess along (now the top as we removed the one we used)
+		else
+		{
+			System.out.println("Failure :(");
+		}
 	}
 
 	/**
-	 * Calculate the possibilities for all the words in the puzzle
-	 * 
-	 * @param wgt the current table being used
+	 * Starts solving algorithm found in Solver
 	 */
-	private void refreshGuesses(WordGuessTable wgt)
+	private Tuple<Boolean, HypothesisTable> solver()
 	{
 		for (int i = 0; i < words.size(); i++)
 		{
 			ArrayList<String> guesses = wg.guess(words.get(i), hypTable);
-			wgt.addWord(words.get(i), guesses);
-			System.out.println(wgt.getWord(words.get(i)).size());
+			guessTable.addWord(words.get(i), guesses);
+//			System.out.println(guessTable.getWord(words.get(i)).size());
 		}
-	}
-
-	private String[] findMostCertainWord(WordGuessTable wgt)
-	{
-		String[] mostCertainWord = words.get(0);
-		for (String[] word : words)
-		{
-			if (wgt.getWord(word).size() < wgt.getWord(mostCertainWord).size())
-			{
-				mostCertainWord = word;
-			}
-		}
-		printArray(mostCertainWord);
-		return mostCertainWord;
+		
+		Solver solver = new Solver(hypTable, guessTable, words, wg, height, width, grid);
+		return solver.start();
 	}
 
 	/**
@@ -146,6 +116,7 @@ public class CodewordSolver
 			if (num.startsWith("0"))
 			{
 				num = num.substring(1, 2); // strip the leading zero if present
+				grid[i][j] = num;
 			}
 			currentWord.add(num);
 		}
@@ -182,28 +153,14 @@ public class CodewordSolver
 	}
 
 	/**
-	 * Print an array with items separated by a comma (not toString)
-	 * 
-	 * @param array array to be printed
-	 */
-	private void printArray(String[] array)
-	{
-		String toPrint = "";
-		for (int i = 0; i < array.length; i++)
-		{
-			toPrint += array[i] + ",";
-		}
-		System.out.println(toPrint.substring(0, toPrint.length() - 1));
-	}
-
-	/**
+	 * DEBUG
 	 * Format the codeword somewhat
 	 */
 	public void printGrid()
 	{
 		for (int i = 0; i < height; i++)
 		{
-			for (int j = 0; j < height; j++)
+			for (int j = 0; j < width; j++)
 			{
 				if (i == 0 && j == 0)
 				{
@@ -213,9 +170,31 @@ public class CodewordSolver
 				{
 					System.out.print("|"); // print at the beginning of the line
 				}
-				String value = grid[i][j].equals("00") ? "  " : grid[i][j];
-				// TODO add in hypotheses
+				String value;
+				if (grid[i][j].equals("00"))
+				{
+					value = "  ";
+				}
+				else
+				{
+					String hyp = hypTable.getHyp(grid[i][j]);		
 
+					// if no hyp made yet stick with the number
+					if (hyp.equals(NO_HYP))
+					{
+						value = grid[i][j];
+						if (value.length() == 1)
+						{
+							value += " ";
+						}
+					}
+					// hyp has been made
+					else
+					{
+						value = hyp + " ";
+					}
+				}
+				
 				System.out.print(value + "|");
 			}
 			System.out.println(); // print below each line
