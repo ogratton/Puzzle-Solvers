@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import auxil.CSVReader;
 
 /**
- * TODO there will be a problem with having 01 and 1 etc. fix.
  * TODO make a GUI for this
  * An early version should allow the user to solve it
  * The final version should have a "solve" button
@@ -19,16 +18,26 @@ public class CodewordSolver
 	private ArrayList<String[]> words = new ArrayList<String[]>();
 	private WordGuesser wg = new WordGuesser("dict/super.txt");
 	private HypothesisTable hypTable = new HypothesisTable();
+	private WordGuessTable guessTable = new WordGuessTable();
 	private int height;
 	private int width;
 
 	public CodewordSolver(String filename)
 	{
+		// read grid from file
 		CSVReader csv = new CSVReader();
 		ArrayList<String[]> setUp = csv.readContents(filename);
-		height = setUp.size();
+		height = setUp.size() - 1;
 		width = setUp.get(0).length;
 		grid = new String[height][width];
+
+		// get the given letters
+		String[] clues = setUp.get(height);
+		for (int i = 0; i < clues.length; i++)
+		{
+			String[] clue = clues[i].split("=");
+			hypTable.makeHyp(clue[0], clue[1]);
+		}
 
 		// fill the grid with the actual numbers
 		for (int i = 0; i < height; i++)
@@ -38,25 +47,70 @@ public class CodewordSolver
 				grid[i][j] = setUp.get(i)[j];
 			}
 		}
+
 		getWords();
-		
-		// TODO: TEMP: PROVIDE STARTER LETTERS HERE
-		hypTable.makeHyp("16", "b");
-		hypTable.makeHyp("17", "z");
-		hypTable.makeHyp("26", "k");
-		
+		refreshGuesses(guessTable);
 		solver();
 		//printGrid();
 	}
-	
+
+	/**
+	 * Solving algorithm
+	 * Should be recursive
+	 */
 	private void solver()
 	{
-		// run WordGuesser on all the words
+		// TODO lol
+		/*
+		 * Need a recursive strategy with immutable tables
+		 * Each "node" must contain its parents' tables too
+		 * This needs to be its own immutable data structure
+		 */
+		WordGuessTable tempGuessTable = guessTable.clone();
+
+		// 1. work through guesses for the "words" with the fewest possibilities
+		String[] mostCertainWord = findMostCertainWord(tempGuessTable);
+		String guess = tempGuessTable.getWord(mostCertainWord).get(0);
+		// 2. apply one of these and remove it from the "guess list"
+		for (int j = 0; j < mostCertainWord.length; j++)
+		{
+			hypTable.makeHyp(mostCertainWord[j], guess.substring(j, j + 1));
+		}
+		tempGuessTable.remHyp(mostCertainWord);
+		// 3. refresh guessTable
+		refreshGuesses(tempGuessTable);
+
+		// if any words have 0 guesses, either the dictionary has failed or one of the hypotheses has
+		// therefore undo the most recent hypothesis and try the next guess along (now the top as we removed the one we used)
+	}
+
+	/**
+	 * Calculate the possibilities for all the words in the puzzle
+	 * 
+	 * @param wgt the current table being used
+	 */
+	private void refreshGuesses(WordGuessTable wgt)
+	{
 		for (int i = 0; i < words.size(); i++)
 		{
 			ArrayList<String> guesses = wg.guess(words.get(i), hypTable);
-			System.out.println(guesses.size());
+			wgt.addWord(words.get(i), guesses);
+			System.out.println(wgt.getWord(words.get(i)).size());
 		}
+	}
+
+	private String[] findMostCertainWord(WordGuessTable wgt)
+	{
+		String[] mostCertainWord = words.get(0);
+		for (String[] word : words)
+		{
+			if (wgt.getWord(word).size() < wgt.getWord(mostCertainWord).size())
+			{
+				mostCertainWord = word;
+			}
+		}
+		printArray(mostCertainWord);
+		return mostCertainWord;
 	}
 
 	/**
@@ -77,7 +131,7 @@ public class CodewordSolver
 			getWords_reachedEnd(vertiWord);
 		}
 	}
-	
+
 	private void getWords_helper(ArrayList<String> currentWord, int i, int j)
 	{
 		// if we reach a blank space
@@ -107,8 +161,8 @@ public class CodewordSolver
 	{
 		if (currentWord.size() > 1)
 		{
-			words.add(ArrayListToArray(currentWord));
-			System.out.println(currentWord);
+			words.add(arrayListToArray(currentWord));
+			//			System.out.println(currentWord);
 			currentWord.clear();
 		}
 		else
@@ -116,8 +170,8 @@ public class CodewordSolver
 			currentWord.clear();
 		}
 	}
-	
-	private String[] ArrayListToArray(ArrayList<String> al)
+
+	private String[] arrayListToArray(ArrayList<String> al)
 	{
 		String[] a = new String[al.size()];
 		for (int i = 0; i < al.size(); i++)
@@ -125,6 +179,21 @@ public class CodewordSolver
 			a[i] = al.get(i);
 		}
 		return a;
+	}
+
+	/**
+	 * Print an array with items separated by a comma (not toString)
+	 * 
+	 * @param array array to be printed
+	 */
+	private void printArray(String[] array)
+	{
+		String toPrint = "";
+		for (int i = 0; i < array.length; i++)
+		{
+			toPrint += array[i] + ",";
+		}
+		System.out.println(toPrint.substring(0, toPrint.length() - 1));
 	}
 
 	/**
@@ -145,6 +214,7 @@ public class CodewordSolver
 					System.out.print("|"); // print at the beginning of the line
 				}
 				String value = grid[i][j].equals("00") ? "  " : grid[i][j];
+				// TODO add in hypotheses
 
 				System.out.print(value + "|");
 			}
