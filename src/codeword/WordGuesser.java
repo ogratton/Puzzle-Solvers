@@ -67,27 +67,35 @@ public class WordGuesser
 
 		for (int i = 0; i < word.length(); i++)
 		{
-			if (isLetter(clue[i]))
+			try
 			{
-				if (word.substring(i, i + 1).equals(clue[i]))
-					continue;
-				else
-					return false;
-			}
-			else
-			{
-				String hyp = htCopy.getHyp(clue[i]);
-				if (hyp.equals("_")) // no hypothesis exists for this letter yet
+				if (isLetter(clue[i]))
 				{
-					htCopy.makeHyp(clue[i], word.substring(i, i + 1));
-				}
-				else
-				{
-					if (word.substring(i, i + 1).equals(hyp))
+					if (word.substring(i, i + 1).equals(clue[i]))
 						continue;
 					else
 						return false;
 				}
+				else
+				{
+					String hyp = htCopy.getHyp(clue[i]);
+					// if no hypothesis exists for this number yet
+					if (hyp.equals("_"))
+					{
+						htCopy.makeHyp2(clue[i], word.substring(i, i + 1));
+					}
+					else
+					{
+						if (word.substring(i, i + 1).equals(hyp))
+							continue;
+						else
+							return false;
+					}
+				}
+			}
+			catch (InvalidHypothesisException e)
+			{
+				continue;
 			}
 		}
 		return true;

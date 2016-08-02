@@ -35,7 +35,6 @@ public class WordGuessTable
 	
 	/**
 	 * Return a clone of itself
-	 * TODO check
 	 */
 	public WordGuessTable copy()
 	{

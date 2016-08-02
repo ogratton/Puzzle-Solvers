@@ -212949,6 +212949,7 @@ sabotine
 sabots
 Sabra
 sabras
+sabre
 sabred
 sabres
 sabretache
@@ -223039,6 +223040,7 @@ shoebindery
 shoebinding
 shoebird
 shoeblack
+shoebox
 shoeboy
 shoebrush
 shoecraft

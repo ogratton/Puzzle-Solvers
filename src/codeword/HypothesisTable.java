@@ -46,9 +46,11 @@ public class HypothesisTable
 	{
 		ArrayList<String> existingHyps = new ArrayList<String>();
 		hypTable.forEach((k, v) -> existingHyps.add(v));
+		// remove from existingHyps the number we are on
+		existingHyps.remove(hypTable.get(number));
 		if (existingHyps.contains(letter))
 		{
-			throw new InvalidHypothesisException("Invalid hyp");
+			throw new InvalidHypothesisException("Hyp: "+number+"\t= "+letter);
 		}
 		else
 		{

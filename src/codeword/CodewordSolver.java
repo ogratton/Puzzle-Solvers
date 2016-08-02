@@ -214,6 +214,6 @@ public class CodewordSolver
 
 	public static void main(String[] args)
 	{
-		new CodewordSolver("codewords/5.csv");
+		new CodewordSolver("codewords/4.csv");
 	}
 }

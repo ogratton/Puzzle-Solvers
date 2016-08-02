@@ -16,7 +16,7 @@ public class WordGuesserSolo
 //		ArrayList<String> guesses = wg.guess(new String[] { "10", "15", "20", "6", "1", "5", "8", "2", "10", "13", "1" }, hypTable); // overshadows
 //		ArrayList<String> guesses = wg.guess(new String[] { "20","17","8","3","3","20","6","8","11","20","2","25","21" }, hypTable); // exaggeratedly
 //		ArrayList<String> guesses = wg.guess(new String[] { "15","20","18","11","12","l","A","11","12","18","G" }, hypTable); 		 // ventilating
-		ArrayList<String> guesses = wg.guess(new String[] { "e", "19", "4", "e", "21", "21" }, hypTable); // reflex?
+		ArrayList<String> guesses = wg.guess(new String[] { "e", "19", "4", "e", "21", "21" }, hypTable); // egress
 
 		for (int i = 0; i < guesses.size(); i++)
 		{

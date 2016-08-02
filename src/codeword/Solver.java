@@ -48,8 +48,7 @@ public class Solver
 		else
 		{
 			// TODO this is code copying from below. Bad boy.
-			if (hypTable.isFull()) // TODO I *think* this is an adequate end goal measure
-				// TODO should also check if the hyp table contains all the letters of the alphabet
+			if (hypTable.isFull())
 				return new Tuple<Boolean, HypothesisTable>(new Boolean(true), hypTable);
 			else
 				return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable);
@@ -86,21 +85,29 @@ public class Solver
 		 */
 		for (int i = 0; i < guessTable.getWord(word).size(); i++)
 		{
-
 			// apply the hypothesis of "word"
 			HypothesisTable htCopy;
-			htCopy = applyHypothesis(i);
-			// refresh the guess table with the new hyp table
-			WordGuessTable wgtCopy = refreshGuesses(htCopy);
-
-			// creates a tree of Solvers as they are started before this Solver ends
-			Solver child = genChild(htCopy, wgtCopy);
-
-			Tuple<Boolean, HypothesisTable> solution = child.start();
-			if (solution.x)
+			try
 			{
-				return solution; // child was successful!!1!
+				htCopy = applyHypothesis(i);
+				// refresh the guess table with the new hyp table
+				WordGuessTable wgtCopy = refreshGuesses(htCopy);
+
+				// creates a tree of Solvers as they are started before this Solver ends
+				Solver child = genChild(htCopy, wgtCopy);
+
+				Tuple<Boolean, HypothesisTable> solution = child.start();
+				if (solution.x)
+				{
+					return solution; // child was successful!!1!
+				}
 			}
+			catch (InvalidHypothesisException e)
+			{
+				System.out.println(e.getMessage()+" - wrong");
+				continue;
+			}
+			
 
 		}
 		return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable); // all the children have run and they have all failed
@@ -161,7 +168,7 @@ public class Solver
 	 * @return A new copy of the hypothesis table with changes applied
 	 * @throws InvalidHypothesisException if a letter is already hypothesised to another number
 	 */
-	private HypothesisTable applyHypothesis(int pos)
+	private HypothesisTable applyHypothesis(int pos) throws InvalidHypothesisException
 	{
 		// Copy existing hypTable
 		HypothesisTable htCopy = hypTable.copy();
@@ -170,8 +177,7 @@ public class Solver
 		for (int i = 0; i < word.length; i++)
 		{
 			String letter = guess.substring(i, i + 1);
-			//TODO if the letter isn't already hypothesised elsewhere
-			htCopy.makeHyp(word[i], letter);
+			htCopy.makeHyp2(word[i], letter); // this can throw the InvalidHypothesisException
 			System.out.println("Hyp: " + word[i] + "\t= " + letter);
 
 		}
