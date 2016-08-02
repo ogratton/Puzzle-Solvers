@@ -49,17 +49,18 @@ public class Solver
 		{
 			// TODO this is code copying from below. Bad boy.
 			if (hypTable.isFull()) // TODO I *think* this is an adequate end goal measure
+				// TODO should also check if the hyp table contains all the letters of the alphabet
 				return new Tuple<Boolean, HypothesisTable>(new Boolean(true), hypTable);
 			else
 				return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable);
 		}
 
 		// if any words have zero possibilities then we have either finished or got something wrong
-		for (String[] word : words)
+		for (String[] word : words) // coded words left in puzzle
 		{
 			if (guessTable.getWord(word).isEmpty())
 			{
-				if (hypTable.isFull()) // TODO I *think* this is an adequate end goal measure
+				if (hypTable.isFull())
 				{
 					/*
 					 * the puzzle is solved, so now we pass the correct hypTable
@@ -80,15 +81,15 @@ public class Solver
 		}
 
 		/*
-		 * for every possibility of 'The Word', make and start a child Solver for
-		 * it
-		 * this will build up a depth first game tree
+		 * for every possibility of 'The Word', make and start a child Solver
+		 * for it. This will build up a depth first game tree
 		 */
 		for (int i = 0; i < guessTable.getWord(word).size(); i++)
 		{
 
 			// apply the hypothesis of "word"
-			HypothesisTable htCopy = applyHypothesis();
+			HypothesisTable htCopy;
+			htCopy = applyHypothesis(i);
 			// refresh the guess table with the new hyp table
 			WordGuessTable wgtCopy = refreshGuesses(htCopy);
 
@@ -100,6 +101,7 @@ public class Solver
 			{
 				return solution; // child was successful!!1!
 			}
+
 		}
 		return new Tuple<Boolean, HypothesisTable>(new Boolean(false), hypTable); // all the children have run and they have all failed
 	}
@@ -128,9 +130,7 @@ public class Solver
 		{
 			ArrayList<String> guesses = wg.guess(words.get(i), ht);
 			wgtCopy.addWord(words.get(i), guesses);
-			//			System.out.println(wgtCopy.getWord(words.get(i)).size());
 		}
-		//		System.out.println("----------");
 		return wgtCopy;
 	}
 
@@ -151,26 +151,29 @@ public class Solver
 				mostCertainWord = word;
 			}
 		}
-		printArray(mostCertainWord);
-		System.out.println("8 is " + hypTable.getHyp("8")); // TODO should always be A for puzzle 2
 		return mostCertainWord;
 	}
 
 	/**
 	 * Use The Word and make a hypothesis for each of its letters
+	 * @param pos 
 	 * 
 	 * @return A new copy of the hypothesis table with changes applied
+	 * @throws InvalidHypothesisException if a letter is already hypothesised to another number
 	 */
-	private HypothesisTable applyHypothesis()
+	private HypothesisTable applyHypothesis(int pos)
 	{
-		//TODO check
 		// Copy existing hypTable
 		HypothesisTable htCopy = hypTable.copy();
 		// get the first of the possibilities for the coded word with the least possibilities
-		String guess = guessTable.getWord(word).get(0);
+		String guess = guessTable.getWord(word).get(pos);
 		for (int i = 0; i < word.length; i++)
 		{
-				htCopy.makeHyp(word[i], guess.substring(i, i + 1));
+			String letter = guess.substring(i, i + 1);
+			//TODO if the letter isn't already hypothesised elsewhere
+			htCopy.makeHyp(word[i], letter);
+			System.out.println("Hyp: " + word[i] + "\t= " + letter);
+
 		}
 
 		printGrid(htCopy);
@@ -178,21 +181,21 @@ public class Solver
 		return htCopy;
 	}
 
-	/**
-	 * DEBUG
-	 * Print an array with items separated by a comma (not toString)
-	 * 
-	 * @param array array to be printed
-	 */
-	private void printArray(String[] array)
-	{
-		String toPrint = "";
-		for (int i = 0; i < array.length; i++)
-		{
-			toPrint += array[i] + ",";
-		}
-		System.out.println(toPrint.substring(0, toPrint.length() - 1));
-	}
+	//	/**
+	//	 * DEBUG
+	//	 * Print an array with items separated by a comma (not toString)
+	//	 * 
+	//	 * @param array array to be printed
+	//	 */
+	//	private void printArray(String[] array)
+	//	{
+	//		String toPrint = "";
+	//		for (int i = 0; i < array.length; i++)
+	//		{
+	//			toPrint += array[i] + ",";
+	//		}
+	//		System.out.println(toPrint.substring(0, toPrint.length() - 1));
+	//	}
 
 	/**
 	 * DEBUG

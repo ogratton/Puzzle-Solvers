@@ -21,7 +21,7 @@ public class CodewordSolver
 	private String[][] grid;
 	private int height;
 	private int width;
-	
+
 	private final String NO_HYP = "_"; // the string to indicate no hypothesis
 
 	public CodewordSolver(String filename)
@@ -33,12 +33,19 @@ public class CodewordSolver
 		width = setUp.get(0).length;
 		grid = new String[height][width];
 
-		// get the given letters from file
-		String[] clues = setUp.get(height);
-		for (int i = 0; i < clues.length; i++)
+		try
 		{
-			String[] clue = clues[i].split("=");
-			hypTable.makeHyp(clue[0], clue[1]);
+			// get the given letters from file
+			String[] clues = setUp.get(height);
+			for (int i = 0; i < clues.length; i++)
+			{
+				String[] clue = clues[i].split("=");
+				hypTable.makeHyp(clue[0], clue[1]);
+			}
+		}
+		catch (ArrayIndexOutOfBoundsException e)
+		{
+			System.err.println("Please enter the given letters");
 		}
 
 		// fill the grid with the actual numbers
@@ -53,17 +60,20 @@ public class CodewordSolver
 
 		// extract the chains of squares that will make up words from the puzzle
 		getWords();
-		printGrid();
+		printGrid(hypTable);
 		// start the solving algorithm
 		Tuple<Boolean, HypothesisTable> solution = solver();
 		if (solution.x)
 		{
 			System.out.println("SUCCESS!!");
-			printGrid(); // TODO print grid with hypTable subbed in
+			printGrid(solution.y);
+			solution.y.print();
 		}
 		else
 		{
 			System.out.println("Failure :(");
+			printGrid(solution.y);
+			solution.y.print();
 		}
 	}
 
@@ -76,9 +86,9 @@ public class CodewordSolver
 		{
 			ArrayList<String> guesses = wg.guess(words.get(i), hypTable);
 			guessTable.addWord(words.get(i), guesses);
-//			System.out.println(guessTable.getWord(words.get(i)).size());
+			//			System.out.println(guessTable.getWord(words.get(i)).size());
 		}
-		
+
 		Solver solver = new Solver(hypTable, guessTable, words, wg, height, width, grid);
 		return solver.start();
 	}
@@ -156,7 +166,7 @@ public class CodewordSolver
 	 * DEBUG
 	 * Format the codeword somewhat
 	 */
-	public void printGrid()
+	public void printGrid(HypothesisTable htCopy)
 	{
 		for (int i = 0; i < height; i++)
 		{
@@ -171,13 +181,13 @@ public class CodewordSolver
 					System.out.print("|"); // print at the beginning of the line
 				}
 				String value;
-				if (grid[i][j].equals("00"))
+				if (grid[i][j].equals("00") || grid[i][j].equals("0"))
 				{
 					value = "  ";
 				}
 				else
 				{
-					String hyp = hypTable.getHyp(grid[i][j]);		
+					String hyp = htCopy.getHyp(grid[i][j]);
 
 					// if no hyp made yet stick with the number
 					if (hyp.equals(NO_HYP))
@@ -194,7 +204,7 @@ public class CodewordSolver
 						value = hyp + " ";
 					}
 				}
-				
+
 				System.out.print(value + "|");
 			}
 			System.out.println(); // print below each line
@@ -204,6 +214,6 @@ public class CodewordSolver
 
 	public static void main(String[] args)
 	{
-		new CodewordSolver("codewords/2.csv");
+		new CodewordSolver("codewords/5.csv");
 	}
 }

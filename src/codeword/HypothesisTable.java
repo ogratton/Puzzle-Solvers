@@ -1,5 +1,6 @@
 package codeword;
 
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -31,11 +32,33 @@ public class HypothesisTable
 	 */
 	public void makeHyp(String number, String letter)
 	{
-		hypTable.put(number, letter);
+			hypTable.put(number, letter);
 	}
 	
 	/**
+	 * Make a hypothesis for "number" to stand for "letter"
+	 * Also checks if "letter" is already assigned to a "number"
+	 * @param number the number from the clue
+	 * @param letter the letter from the word
+	 * @throws InvalidHypothesisException
+	 */
+	public void makeHyp2(String number, String letter) throws InvalidHypothesisException 
+	{
+		ArrayList<String> existingHyps = new ArrayList<String>();
+		hypTable.forEach((k, v) -> existingHyps.add(v));
+		if (existingHyps.contains(letter))
+		{
+			throw new InvalidHypothesisException("Invalid hyp");
+		}
+		else
+		{
+			hypTable.put(number, letter);
+		}
+	}
+
+	/**
 	 * Access the hypothesis table for "number"
+	 * 
 	 * @param nubmer the key for the hyp table
 	 * @return current hypothesis for "number"
 	 */
@@ -43,7 +66,7 @@ public class HypothesisTable
 	{
 		return hypTable.get(number);
 	}
-	
+
 	/**
 	 * @return is every letter hypothesised to something?
 	 */
@@ -52,17 +75,18 @@ public class HypothesisTable
 		for (int i = 1; i <= 26; i++)
 		{
 			String num = Integer.toString(i);
-			if(hypTable.get(num).equals(NO_HYP))
+			if (hypTable.get(num).equals(NO_HYP))
 			{
 				return false;
 			}
 		}
-		
+
 		return true;
 	}
-	
+
 	/**
 	 * Copy mappings of 'that' onto 'this'
+	 * 
 	 * @param that
 	 */
 	public HypothesisTable copy()
@@ -75,5 +99,13 @@ public class HypothesisTable
 		}
 		return newHT;
 	}
-	
+
+	/**
+	 * print the mappings to console
+	 */
+	public void print()
+	{
+		hypTable.forEach((k, v) -> System.out.println(k + "\t= " + v));
+	}
+
 }
